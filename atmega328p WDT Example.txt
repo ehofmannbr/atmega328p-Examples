@@ -1,0 +1,45 @@
+WDE = 1 - Gera Reset 
+WDIF = 1, inibe interrupcao
+WDIE = 0 - Nao gera interrupcao
+
+WDP0 = 1
+WDP1 = 0
+WDP2 = 0
+WDP3 = 1
+
+WDTON - Fusivel quando 0 força modo de reset WDE=1 e WDIE=0
+WDR - Instrucao para ressetar WDT
+
+Clearing WDE and setting time out configuration
+
+WDTCSR.WDCE(Watchdog Change Enable)=1 e WDRCSR.WDE(Watchdog System Reset Enable)=1
+WDTCSR.WDPs=1001 e WDRCSR.WDCE=0
+
+Tem que limpar também MCUSR.WDRF
+
+Limpeza e desligamento do WDT
+
+cli
+wdr
+;limpa o flag de razaodoreset
+in r16, MCUSR
+andi r16, (0xff & (0<<WDRF))
+out r16, MCUSR
+;Prepara a configuracao de WDTCSR
+lds r16, WDTCSR
+ori r16, (1<<WDCE) | (1<<WDE)
+sts WDTCSR, r16
+;desliga WDE
+ldi r16, (0<<WDE)
+sts WDTCSR, r16
+
+Limpeza e refazimento do timeout
+
+cli
+wdr
+lds r16, WDTCSR
+ori r16, (1<<WDCE) | (1<<WDE)
+sts WDRCSR, r16
+ldi r16, (1<<WDE) | (1<<WDP3) | (1<<WDP0)
+sts WDTCSR, r16
+
